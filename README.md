@@ -47,7 +47,8 @@ scikit-learn
 matplotlib
 ```
 
-See ```resources/environment_details.txt``` for exact versions of each package and Python.
+See ```resources/environment_details.txt``` for exact versions of each package and Python
+that produced the results in the **Example Use** section.
 
 **Input**
 
@@ -82,12 +83,11 @@ descriptions of several parameters here.
 The results and plot in the ```example/``` directory can be generated with the following
 commands. 
 
-* run EMSCO 10 times for each confidence threshold in [.55,...,.95], record
-average test performance. If comparing EMSCO against alternative budgeted methods, ensure that `--runs` is set to offer sufficiently precise performance estimates. 
+* run EMSCO 10 times for each confidence threshold in [.55,...,.95], and record average test performance.
 
 ```python3 emsco_sweep.py  --train_data example/example_train.csv --val_data example/example_val.csv --test_data example/example_test.csv --cost_data example/example_costs.txt --exp_num 9  --runs 10  --max_stages 5  --sweep .05 --min_prob .55 --out example/example_sweep_results.txt```
 
-* Plot the results. The cost-accuracy tradeoff curve is an important tool for measuring and comparing performance of budgeted classifiers. Since EMSCO is also selective, coverage must be accounted for too, so the curve is color-coded according to this metric. 
+* Plot the results. The cost-accuracy tradeoff curve is an important tool for measuring and comparing performance of budgeted classifiers. Since EMSCO is also selective, coverage must be accounted for too, *so each point on the curve is color-coded according to this metric ($g_1$)*. 
 
 ```python3 resources/cost_acc.py example/example_sweep_results.txt```
 
