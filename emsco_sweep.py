@@ -47,8 +47,7 @@ def rank(population):
         population[index].inv_time = 0.0
     min_time = min([chromosome.time for chromosome in population])
     for index, _ in enumerate(population):
-        population[index].inv_time = round(
-    min_time / population[index].time, 3)
+        population[index].inv_time = round(min_time / population[index].time, 3)
     assert min([chromosome.inv_time for chromsome in population]) > 0.0
     current_rank = 1
     temp_population = deepcopy(population)
@@ -142,7 +141,7 @@ def crossover(r_hat, parent_a, parent_b):
 
 def classify_dataframe(clf, train_df, test_df, features,
                        correct_label, min_proba,
-                       solver_="lbfgs",lr_iter=500):
+                       solver_="sag",lr_iter=1000):
     """selectively classify inputs in test_df"""
     clf = LogisticRegression(max_iter=lr_iter,solver=solver_)
     clf_trained = clf.fit(train_df[features], train_df[correct_label])
@@ -170,7 +169,7 @@ def classify_dataframe(clf, train_df, test_df, features,
 
 
 def classify_with_stages(clf, train_df, test_df, stages,
-                         feature_times, min_proba, index=-1,solver_="lbfgs",lr_iter=1000):
+                         feature_times, min_proba, index=-1,solver_="sag",lr_iter=1000):
     """run instances through sequential classification protocol"""
     feature_names = list(train_df.columns.values)[:-1]
     total_conclusive = 0
@@ -218,8 +217,8 @@ def classify_with_stages(clf, train_df, test_df, stages,
 
 
 def random_chromosome(clf, train_df, test_df, num_feature,
-                      feature_times, min_proba, max_stages, solver_="lbfgs",
-                      lr_iter=500, stage_list=None, mut_prob=0.5):
+                      feature_times, min_proba, max_stages, solver_="sag",
+                      lr_iter=1000, stage_list=None, mut_prob=0.5):
     """
     generate a random 2-stage chromosome (solution and score)
     """
@@ -243,8 +242,8 @@ def sort_population(population):
     sort the population (descending order) based on chromosome fitness
     :population is a list of chromosomes
     """
-    return sorted(
-        population, key=lambda chromosome: chromosome.fitness, reverse=True)
+    return sorted(population, key=lambda chromosome: chromosome.fitness,
+                  reverse=True)
 
 
 def chromosome_hash(chromosome):
@@ -263,8 +262,7 @@ def chromosome_hash(chromosome):
 def find_best_chromosome(population):
     """return copy of 'best' chromosome in population"""
     best_fitness = population[0].fitness
-    best_lst = [
-        chromosome for chromosome in population if chromosome.fitness == best_fitness]
+    best_lst = [chromosome for chromosome in population if chromosome.fitness == best_fitness]
     best_index = 0
     for index, _ in enumerate(best_lst):
         if max(best_lst[index].stage_list) < max(
@@ -294,19 +292,19 @@ def main():
     parser.add_argument('--crossover_rate', type=float, default=0.8)
     parser.add_argument('--mutation_rate', type=float, default=0.05,
                         help='probability of an index undergoing mutation')
-    parser.add_argument('--min_prob', type=float, default=0.55,
+    parser.add_argument('--min_prob', type=float, default=0.50,
                         help='prediction confidence threshold (p*)')
     parser.add_argument('--max_stages', type=int)
     parser.add_argument('--inc', type=int, default=1)
     parser.add_argument('--bias', type=float, default=2,
                         help="beta parameter affecting mutation")
-    parser.add_argument('--output_length', type=int, default=5)
-    parser.add_argument('--sweep',type=float, default=.05)
-    parser.add_argument('--exp_num', type=int, default=10)
-    parser.add_argument('--lr_iter', type=int, default=100)
+    parser.add_argument('--output_length', type=int, default=10)
+    parser.add_argument('--sweep',type=float, default=.10)
+    parser.add_argument('--exp_num', type=int, default=5)
+    parser.add_argument('--lr_iter', type=int, default=1000)
     parser.add_argument('--lr_solver',type=str, default="sag",
-        help="use `lbfgs` for deterministic gradient descent")
-    parser.add_argument('--runs', type=int, default=3)
+        help="for deterministic gradient descent, use `lbfgs` instead")
+    parser.add_argument('--runs', type=int, default=1)
     parser.add_argument('--out',type=str, default = "sweep_output_{}.txt".format(date_stamp))
     args = vars(parser.parse_args())
 
@@ -466,9 +464,11 @@ def main():
                     if exp == 0:
                         output_file.write("runs\tp_hat\ttest_accuracy\ttest_coverage\ttest_cost\tacc_std\tcov_std\tcost_std\n")
                     
-                    output_file.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}".format(args['runs'], min_proba, round(acc_avg,4),
-                        round(cov_avg,4), round(cost_avg,4), round(acc_std,4), round(cov_std,4),
-                        round(cost_std,4)) + "\n")
+                    output_file.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}".format(
+                        args['runs'], min_proba, round(acc_avg,3),
+                        round(cov_avg,3), round(cost_avg,3),
+                        round(acc_std,3), round(cov_std,3),
+                        round(cost_std,3)) + "\n")
                     output_file.close()
 
 if __name__ == '__main__':
